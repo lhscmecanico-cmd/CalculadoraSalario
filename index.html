@@ -134,6 +134,84 @@
       opacity: 0.5;
     }
 
+    /* Register form */
+    .register-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .register-divider::before,
+    .register-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .register-divider span {
+      font-size: 0.75rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .register-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .register-form input {
+      width: 100%;
+      padding: 13px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      font-size: 0.95rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .register-form input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+
+    .reg-pin-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .reg-pin-row input { flex: 1; margin: 0; }
+
+    .reg-btn {
+      flex-shrink: 0;
+      padding: 13px 20px;
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      border: none;
+      border-radius: 14px;
+      color: white;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+
+    .reg-btn:hover { filter: brightness(1.1); }
+    .reg-btn:active { transform: scale(0.96); }
+
+    .reg-error {
+      font-size: 0.78rem;
+      color: var(--red);
+      min-height: 18px;
+      padding-left: 4px;
+    }
+
     /* PIN modal */
     .pin-modal {
       position: fixed;
@@ -810,6 +888,19 @@
     <div class="user-list" id="userList">
       <div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:20px">Carregando...</div>
     </div>
+
+    <!-- Register form -->
+    <div class="register-divider">
+      <span>Novo por aqui?</span>
+    </div>
+    <div class="register-form" id="registerForm">
+      <input type="text" id="regName" placeholder="Seu nome" autocomplete="off" maxlength="32">
+      <div class="reg-pin-row">
+        <input type="password" id="regPin" placeholder="PIN (4 dígitos)" maxlength="4" inputmode="numeric" pattern="\d{4}">
+        <button class="reg-btn" onclick="registerUser()">Entrar</button>
+      </div>
+      <div class="reg-error" id="regError"></div>
+    </div>
   </div>
 </div>
 
@@ -915,6 +1006,7 @@
   <div class="admin-tabs">
     <button class="admin-tab active" onclick="switchTab('history')">📊 Histórico</button>
     <button class="admin-tab" onclick="switchTab('users')">👥 Usuários</button>
+    <button class="admin-tab" onclick="switchTab('settings')">⚙️ Config</button>
   </div>
   <div class="admin-content">
 
@@ -944,6 +1036,27 @@
       </div>
       <div class="section-label">Usuários Cadastrados</div>
       <div id="userMgmtList"></div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="tabSettings" style="display:none">
+      <div class="add-user-form">
+        <h3>🔑 Trocar PIN do Master</h3>
+        <div class="form-group" style="margin-bottom:10px">
+          <label>PIN Atual</label>
+          <input type="password" id="masterPinAtual" placeholder="PIN atual" maxlength="4" inputmode="numeric" style="width:100%;padding:11px 13px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:0.9rem;outline:none;font-family:'Space Mono',monospace">
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <label>Novo PIN</label>
+          <input type="password" id="masterPinNovo" placeholder="4 dígitos" maxlength="4" inputmode="numeric" style="width:100%;padding:11px 13px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:0.9rem;outline:none;font-family:'Space Mono',monospace">
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+          <label>Confirmar Novo PIN</label>
+          <input type="password" id="masterPinConfirm" placeholder="Repita o novo PIN" maxlength="4" inputmode="numeric" style="width:100%;padding:11px 13px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:0.9rem;outline:none;font-family:'Space Mono',monospace">
+        </div>
+        <button class="add-btn" onclick="changeMasterPin()">Salvar novo PIN</button>
+        <div id="pinChangeMsg" style="margin-top:12px;font-size:0.82rem;min-height:18px;text-align:center"></div>
+      </div>
     </div>
 
   </div>
@@ -990,12 +1103,12 @@
       // Se não existir nenhum usuário, cria o master padrão
       if (allUsers.length === 0) {
         await setDoc(doc(db, 'users', 'master'), {
-          name: 'Master',
+          name: 'Lhsc',
           role: 'master',
           pin: '0000',
           createdAt: serverTimestamp()
         });
-        allUsers = [{ id: 'master', name: 'Master', role: 'master', pin: '0000' }];
+        allUsers = [{ id: 'master', name: 'Lhsc', role: 'master', pin: '0000' }];
       }
 
       renderLoginList();
@@ -1278,11 +1391,22 @@
   };
 
   window.switchTab = function(tab) {
-    document.querySelectorAll('.admin-tab').forEach((t,i) => {
-      t.classList.toggle('active', (i===0 && tab==='history') || (i===1 && tab==='users'));
+    document.querySelectorAll('.admin-tab').forEach((t, i) => {
+      t.classList.toggle('active',
+        (i === 0 && tab === 'history') ||
+        (i === 1 && tab === 'users') ||
+        (i === 2 && tab === 'settings')
+      );
     });
-    document.getElementById('tabHistory').style.display = tab === 'history' ? 'block' : 'none';
-    document.getElementById('tabUsers').style.display = tab === 'users' ? 'block' : 'none';
+    document.getElementById('tabHistory').style.display  = tab === 'history'  ? 'block' : 'none';
+    document.getElementById('tabUsers').style.display    = tab === 'users'    ? 'block' : 'none';
+    document.getElementById('tabSettings').style.display = tab === 'settings' ? 'block' : 'none';
+    if (tab === 'settings') {
+      document.getElementById('masterPinAtual').value = '';
+      document.getElementById('masterPinNovo').value = '';
+      document.getElementById('masterPinConfirm').value = '';
+      document.getElementById('pinChangeMsg').textContent = '';
+    }
   };
 
   async function loadHistory() {
@@ -1381,6 +1505,74 @@
       </div>
     `).join('');
   }
+
+  // ─── REGISTER (login screen) ───
+  window.registerUser = async function() {
+    const name = document.getElementById('regName').value.trim();
+    const pin  = document.getElementById('regPin').value.trim();
+    const errEl = document.getElementById('regError');
+    errEl.textContent = '';
+
+    if (!name) { errEl.textContent = 'Digite seu nome.'; return; }
+    if (!/^\d{4}$/.test(pin)) { errEl.textContent = 'PIN deve ter exatamente 4 dígitos.'; return; }
+
+    // Nome não pode ser "Lhsc" (reservado ao master)
+    if (name.toLowerCase() === 'lhsc') { errEl.textContent = 'Este nome é reservado.'; return; }
+
+    // Verifica duplicata de nome
+    const duplicate = allUsers.find(u => u.name.toLowerCase() === name.toLowerCase());
+    if (duplicate) { errEl.textContent = 'Já existe um usuário com este nome.'; return; }
+
+    try {
+      const newId = 'user_' + Date.now();
+      await setDoc(doc(db, 'users', newId), {
+        name, pin, role: 'common', createdAt: serverTimestamp()
+      });
+      const newUser = { id: newId, name, pin, role: 'common' };
+      allUsers.push(newUser);
+      renderLoginList();
+      document.getElementById('regName').value = '';
+      document.getElementById('regPin').value = '';
+      // Faz login direto
+      loginAs(newUser);
+    } catch(e) {
+      errEl.textContent = 'Erro ao cadastrar. Tente novamente.';
+    }
+  };
+
+  // Enter key on register form
+  document.getElementById('regPin').addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.registerUser();
+  });
+
+  // ─── CHANGE MASTER PIN ───
+  window.changeMasterPin = async function() {
+    const atual    = document.getElementById('masterPinAtual').value.trim();
+    const novo     = document.getElementById('masterPinNovo').value.trim();
+    const confirm  = document.getElementById('masterPinConfirm').value.trim();
+    const msgEl    = document.getElementById('pinChangeMsg');
+    msgEl.style.color = 'var(--red)';
+    msgEl.textContent = '';
+
+    const master = allUsers.find(u => u.role === 'master');
+    if (!master) { msgEl.textContent = 'Master não encontrado.'; return; }
+    if (atual !== master.pin) { msgEl.textContent = 'PIN atual incorreto.'; return; }
+    if (!/^\d{4}$/.test(novo)) { msgEl.textContent = 'Novo PIN deve ter 4 dígitos.'; return; }
+    if (novo !== confirm) { msgEl.textContent = 'Os PINs não coincidem.'; return; }
+
+    try {
+      await setDoc(doc(db, 'users', 'master'), { ...master, pin: novo });
+      master.pin = novo;
+      if (currentUser && currentUser.role === 'master') currentUser.pin = novo;
+      msgEl.style.color = 'var(--green)';
+      msgEl.textContent = 'PIN alterado com sucesso!';
+      document.getElementById('masterPinAtual').value = '';
+      document.getElementById('masterPinNovo').value = '';
+      document.getElementById('masterPinConfirm').value = '';
+    } catch(e) {
+      msgEl.textContent = 'Erro ao salvar. Tente novamente.';
+    }
+  };
 
   window.addUser = async function() {
     const name = document.getElementById('newUserName').value.trim();
