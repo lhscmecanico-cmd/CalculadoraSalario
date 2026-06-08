@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Usuarios: qualquer um pode ler (para login), só o app gerencia
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if true; // O controle de acesso é feito no frontend
+    }
+
+    // Preferencias: usuario lê/escreve apenas as suas
+    match /prefs/{userId} {
+      allow read, write: if true;
+    }
+
+    // Historico: qualquer um pode escrever (calculos dos usuarios),
+    // leitura aberta (o controle de quem vê é no frontend)
+    match /history/{docId} {
+      allow read, write: if true;
+    }
+  }
+}

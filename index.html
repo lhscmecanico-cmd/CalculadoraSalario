@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cálculo Salário</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1120;
+      --surface: #0f172a;
+      --surface2: #1e293b;
+      --border: #334155;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #3b82f6;
+      --green: #10b981;
+      --red: #f87171;
+      --yellow: #fbbf24;
+      --master: #a78bfa;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 414px;
+      background: var(--surface);
+      min-height: 100vh;
+      position: relative;
+      box-shadow: 0 0 60px rgba(0,0,0,0.7);
+      overflow-x: hidden;
+    }
+
+    /* ─── LOGIN SCREEN ─── */
+    #loginScreen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      gap: 0;
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 360px;
+      padding: 0 28px;
+    }
+
+    .login-logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+      letter-spacing: -1px;
+    }
+
+    .login-logo span { color: var(--green); }
+
+    .login-sub {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 36px;
+    }
+
+    .login-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .user-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+
+    .user-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .user-item:hover { border-color: var(--accent); background: #1a2640; }
+    .user-item:active { transform: scale(0.98); }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .avatar-common { background: linear-gradient(135deg, #3b82f6, #6366f1); }
+    .avatar-master { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
+
+    .user-info { flex: 1; }
+    .user-name { font-weight: 600; font-size: 0.95rem; }
+    .user-role { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+    .user-arrow {
+      color: var(--muted);
+      opacity: 0.5;
+    }
+
+    /* PIN modal */
+    .pin-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+
+    .pin-modal.open { display: flex; }
+
+    .pin-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 32px 28px;
+      width: 100%;
+      max-width: 320px;
+      text-align: center;
+    }
+
+    .pin-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 6px; }
+    .pin-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 28px; }
+
+    .pin-dots {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .pin-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      transition: all 0.2s;
+    }
+
+    .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
+
+    .pin-keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .pin-key {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+    }
+
+    .pin-key:hover { background: var(--border); }
+    .pin-key:active { transform: scale(0.93); }
+    .pin-key.del { color: var(--red); }
+    .pin-key.cancel { color: var(--muted); font-size: 0.8rem; font-family: 'DM Sans', sans-serif; }
+
+    .pin-error {
+      font-size: 0.8rem;
+      color: var(--red);
+      margin-top: 12px;
+      min-height: 20px;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      background: linear-gradient(135deg, var(--surface2) 0%, var(--surface) 100%);
+      padding: 20px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      border-bottom-left-radius: 24px;
+      border-bottom-right-radius: 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      margin-bottom: 22px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-left { display: flex; flex-direction: column; }
+
+    .header-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .header-user {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      border-radius: 10px;
+      transition: background 0.2s;
+    }
+
+    .icon-btn:hover { background: var(--surface2); }
+
+    .master-btn {
+      color: var(--master);
+      position: relative;
+    }
+
+    .master-btn::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--master);
+      box-shadow: 0 0 6px var(--master);
+    }
+
+    /* ─── MAIN CONTENT ─── */
+    .main-content {
+      padding: 0 18px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+    }
+
+    .card-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 13px;
+    }
+
+    .card {
+      background: var(--surface2);
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.15s;
+    }
+
+    .card:active { transform: scale(0.98); }
+
+    .card label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+
+    .card .value {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .card.danger .value { color: var(--red); }
+    .card.warning .value { color: var(--yellow); }
+    .card.primary .value { color: var(--accent); }
+
+    .card.highlight {
+      background: linear-gradient(135deg, #065f46 0%, #059669 100%);
+      border: none;
+      box-shadow: 0 8px 24px rgba(16,185,129,0.25);
+    }
+
+    .card.highlight label { color: #a7f3d0; }
+    .card.highlight .value { font-size: 1.65rem; color: #fff; }
+
+    .card.input-card {
+      background: var(--surface);
+      border-color: var(--accent);
+    }
+
+    .card.input-card input {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 1.2rem;
+      font-weight: 700;
+      outline: none;
+      width: 100%;
+    }
+
+    .card.input-card input::placeholder { color: #334155; }
+
+    /* ─── SIDEBAR (Inserir Dados) ─── */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 85%;
+      max-width: 320px;
+      height: 100%;
+      background: var(--surface2);
+      box-shadow: -8px 0 32px rgba(0,0,0,0.6);
+      transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 500;
+      padding: 24px;
+      overflow-y: auto;
+      border-top-left-radius: 24px;
+      border-bottom-left-radius: 24px;
+      border-left: 1px solid var(--border);
+    }
+
+    .sidebar.active { right: 0; }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(3px);
+      display: none;
+      z-index: 499;
+    }
+
+    .overlay.active { display: block; }
+
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .sidebar-header h2 { font-size: 1.1rem; font-weight: 700; }
+
+    .close-btn {
+      background: var(--border);
+      border: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      cursor: pointer;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .close-btn:hover { background: #475569; }
+
+    .form-group { margin-bottom: 14px; }
+
+    .form-group label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 7px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 0.95rem;
+      color: var(--text);
+      outline: none;
+      transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .form-group input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+    }
+
+    .save-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #059669, #10b981);
+      border: none;
+      border-radius: 14px;
+      color: white;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+      letter-spacing: 0.3px;
+    }
+
+    .save-btn:hover { filter: brightness(1.1); }
+    .save-btn:active { transform: scale(0.98); }
+
+    /* ─── ADMIN PANEL ─── */
+    .admin-panel {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 600;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .admin-panel.open { display: flex; }
+
+    .admin-header {
+      padding: 22px 20px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .admin-header h2 { font-size: 1.05rem; font-weight: 700; flex: 1; }
+    .admin-badge {
+      background: rgba(167,139,250,0.2);
+      color: var(--master);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(167,139,250,0.3);
+    }
+
+    .admin-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .admin-tab {
+      flex: 1;
+      padding: 13px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .admin-tab.active { color: var(--master); border-bottom-color: var(--master); }
+
+    .admin-content { flex: 1; overflow-y: auto; padding: 20px; }
+
+    /* History */
+    .history-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .history-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .history-user { font-weight: 700; font-size: 0.9rem; }
+    .history-date { font-size: 0.72rem; color: var(--muted); }
+
+    .history-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .history-item {
+      background: var(--surface);
+      border-radius: 10px;
+      padding: 9px 12px;
+    }
+
+    .history-item-label {
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 3px;
+    }
+
+    .history-item-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .history-result {
+      margin-top: 10px;
+      padding: 10px 14px;
+      background: rgba(16,185,129,0.1);
+      border-radius: 10px;
+      border: 1px solid rgba(16,185,129,0.2);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--green);
+      text-align: center;
+    }
+
+    .history-empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 48px 20px;
+      font-size: 0.9rem;
+    }
+
+    /* User management */
+    .user-mgmt-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-mgmt-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+
+    .user-mgmt-info { flex: 1; }
+    .user-mgmt-name { font-weight: 600; font-size: 0.9rem; }
+    .user-mgmt-role { font-size: 0.72rem; color: var(--muted); }
+
+    .user-del-btn {
+      background: rgba(248,113,113,0.1);
+      border: 1px solid rgba(248,113,113,0.3);
+      border-radius: 8px;
+      color: var(--red);
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .user-del-btn:hover { background: rgba(248,113,113,0.2); }
+
+    .add-user-form {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .add-user-form h3 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 14px;
+    }
+
+    .add-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .add-btn:hover { filter: brightness(1.1); }
+
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      padding-left: 2px;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .filter-select {
+      flex: 1;
+      padding: 10px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 0.82rem;
+      outline: none;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      z-index: 9999;
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      white-space: nowrap;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { border-color: rgba(16,185,129,0.4); color: var(--green); }
+    .toast.error { border-color: rgba(248,113,113,0.4); color: var(--red); }
+
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9998;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .loading-text {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Inicializando...</div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- PIN Modal -->
+<div class="pin-modal" id="pinModal">
+  <div class="pin-box">
+    <div class="pin-title" id="pinTitle">Digite seu PIN</div>
+    <div class="pin-sub" id="pinSub">4 dígitos para acessar</div>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+    </div>
+    <div class="pin-keypad">
+      <button class="pin-key" onclick="pinKey('1')">1</button>
+      <button class="pin-key" onclick="pinKey('2')">2</button>
+      <button class="pin-key" onclick="pinKey('3')">3</button>
+      <button class="pin-key" onclick="pinKey('4')">4</button>
+      <button class="pin-key" onclick="pinKey('5')">5</button>
+      <button class="pin-key" onclick="pinKey('6')">6</button>
+      <button class="pin-key" onclick="pinKey('7')">7</button>
+      <button class="pin-key" onclick="pinKey('8')">8</button>
+      <button class="pin-key" onclick="pinKey('9')">9</button>
+      <button class="pin-key cancel" onclick="cancelPin()">Cancelar</button>
+      <button class="pin-key" onclick="pinKey('0')">0</button>
+      <button class="pin-key del" onclick="pinDel()">⌫</button>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+  </div>
+</div>
+
+<!-- Login Screen -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">Salário<span>.</span></div>
+    <div class="login-sub">Selecione seu perfil para continuar</div>
+    <div class="login-label">Usuários</div>
+    <div class="user-list" id="userList">
+      <div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:20px">Carregando...</div>
+    </div>
+  </div>
+</div>
+
+<!-- App -->
+<div class="app" id="appContent" style="display:none">
+  <div class="overlay" id="overlay"></div>
+
+  <header class="header">
+    <div class="header-left">
+      <div class="header-title">Salário<span style="color:var(--green)">.</span></div>
+      <div class="header-user" id="headerUser">Usuário</div>
+    </div>
+    <div class="header-actions">
+      <!-- Master-only icon (hidden for common users) -->
+      <button class="icon-btn master-btn" id="masterBtn" style="display:none" title="Painel Admin" onclick="openAdmin()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"></circle>
+          <path d="M3 20a9 9 0 0 1 18 0"></path>
+          <path d="M12 14v2m0 4h.01"></path>
+        </svg>
+      </button>
+      <button class="icon-btn" id="logoutBtn" title="Sair" onclick="logout()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16,17 21,12 16,7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="menuBtn" title="Dados">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="card input-card">
+      <label for="valorProduzidoInput">Valor Produzido (R$)</label>
+      <input type="text" id="valorProduzidoInput" placeholder="0,00" value="0,00">
+    </div>
+
+    <div class="card-row">
+      <div class="card warning"><label>IR</label><span class="value" id="irDisplay">R$ 0,00</span></div>
+      <div class="card warning"><label>INSS</label><span class="value" id="inssDisplay">R$ 0,00</span></div>
+    </div>
+    <div class="card-row">
+      <div class="card primary"><label>Salário Bruto</label><span class="value" id="salarioBrutoDisplay">R$ 0,00</span></div>
+      <div class="card danger"><label>Descontos Totais</label><span class="value" id="descontosTotaisDisplay">R$ 0,00</span></div>
+    </div>
+    <div class="card-row">
+      <div class="card"><label>Ganhos Diários</label><span class="value" id="ganhosDiariosDisplay">R$ 0,00</span></div>
+      <div class="card"><label>Salário Total</label><span class="value" id="salarioTotalDisplay">R$ 0,00</span></div>
+    </div>
+    <div class="card highlight">
+      <label>Salário Líquido</label>
+      <span class="value" id="salarioLiquidoDisplay">R$ 0,00</span>
+    </div>
+  </main>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Inserir Dados</h2>
+      <button class="close-btn" id="closeBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="form-group"><label>Dias Trabalhados</label><input type="number" id="diasTrabalhados" placeholder="Ex: 22"></div>
+    <div class="form-group"><label>Dias de Descanso</label><input type="number" id="diasDescanso" placeholder="Ex: 8"></div>
+    <div class="form-group"><label>Salário Fixo (R$)</label><input type="number" step="0.01" id="salarioFixo" placeholder="0,00"></div>
+    <div class="form-group"><label>Comissão (%)</label><input type="number" step="0.1" id="percentComissao" placeholder="0.0"></div>
+    <div class="form-group"><label>Imposto Nota Fiscal (%)</label><input type="number" step="0.1" id="impostoNotaPercent" placeholder="Ex: 5"></div>
+    <div class="form-group"><label>Adiantamento (R$)</label><input type="number" step="0.01" id="adiantamento" placeholder="0,00"></div>
+    <div class="form-group"><label>Plano de Saúde (R$)</label><input type="number" step="0.01" id="planoSaude" placeholder="0,00"></div>
+    <div class="form-group"><label>Outros (R$)</label><input type="number" step="0.01" id="outros" placeholder="0,00"></div>
+    <button class="save-btn" id="saveCalcBtn">Salvar Cálculo</button>
+  </aside>
+</div>
+
+<!-- Admin Panel -->
+<div class="admin-panel" id="adminPanel">
+  <div class="admin-header">
+    <button class="icon-btn" onclick="closeAdmin()" style="padding:6px">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15,18 9,12 15,6"/>
+      </svg>
+    </button>
+    <h2>Painel Master</h2>
+    <span class="admin-badge">MASTER</span>
+  </div>
+  <div class="admin-tabs">
+    <button class="admin-tab active" onclick="switchTab('history')">📊 Histórico</button>
+    <button class="admin-tab" onclick="switchTab('users')">👥 Usuários</button>
+  </div>
+  <div class="admin-content">
+
+    <!-- History Tab -->
+    <div id="tabHistory">
+      <div class="filter-bar">
+        <select class="filter-select" id="filterUser" onchange="renderHistory()">
+          <option value="">Todos os usuários</option>
+        </select>
+      </div>
+      <div id="historyList"></div>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="tabUsers" style="display:none">
+      <div class="add-user-form">
+        <h3>+ Adicionar Usuário</h3>
+        <div class="form-group" style="margin-bottom:10px">
+          <label>Nome</label>
+          <input type="text" id="newUserName" placeholder="Nome do usuário" style="width:100%;padding:11px 13px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:0.9rem;outline:none;font-family:'DM Sans',sans-serif">
+        </div>
+        <div class="form-group" style="margin-bottom:10px">
+          <label>PIN (4 dígitos)</label>
+          <input type="number" id="newUserPin" placeholder="1234" maxlength="4" style="width:100%;padding:11px 13px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:0.9rem;outline:none;font-family:'Space Mono',monospace">
+        </div>
+        <button class="add-btn" onclick="addUser()">Adicionar</button>
+      </div>
+      <div class="section-label">Usuários Cadastrados</div>
+      <div id="userMgmtList"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getFirestore, collection, doc, addDoc, getDocs, getDoc,
+    setDoc, deleteDoc, query, orderBy, where, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ─── FIREBASE CONFIG — substitua com suas credenciais ───
+  const firebaseConfig = {
+  apiKey: "AIzaSyAOIcyilEucQ3s70k-QDaag5x9rEZnJwmo",
+  authDomain: "calculadora-de-salario-711da.firebaseapp.com",
+  projectId: "calculadora-de-salario-711da",
+  storageBucket: "calculadora-de-salario-711da.firebasestorage.app",
+  messagingSenderId: "523446421051",
+  appId: "1:523446421051:web:f6b9a5a79129a74287fe1e"
+};
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // ─── STATE ───
+  let currentUser = null;
+  let allUsers = [];
+  let allHistory = [];
+  let pinBuffer = '';
+  let pinTarget = null; // { userId, resolve }
+
+  // ─── INIT ───
+  async function init() {
+    await loadUsers();
+    hideLoading();
+  }
+
+  async function loadUsers() {
+    try {
+      const snap = await getDocs(collection(db, 'users'));
+      allUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      // Se não existir nenhum usuário, cria o master padrão
+      if (allUsers.length === 0) {
+        await setDoc(doc(db, 'users', 'master'), {
+          name: 'Master',
+          role: 'master',
+          pin: '0000',
+          createdAt: serverTimestamp()
+        });
+        allUsers = [{ id: 'master', name: 'Master', role: 'master', pin: '0000' }];
+      }
+
+      renderLoginList();
+    } catch (e) {
+      console.error(e);
+      showToast('Erro ao conectar ao Firebase. Verifique as credenciais.', 'error');
+    }
+  }
+
+  function renderLoginList() {
+    const list = document.getElementById('userList');
+    list.innerHTML = '';
+    allUsers.forEach(u => {
+      const isMaster = u.role === 'master';
+      const initial = u.name.charAt(0).toUpperCase();
+      const div = document.createElement('div');
+      div.className = 'user-item';
+      div.innerHTML = `
+        <div class="user-avatar ${isMaster ? 'avatar-master' : 'avatar-common'}">${initial}</div>
+        <div class="user-info">
+          <div class="user-name">${u.name}</div>
+          <div class="user-role">${isMaster ? '● Administrador' : '● Usuário'}</div>
+        </div>
+        <div class="user-arrow">›</div>
+      `;
+      div.onclick = () => selectUser(u);
+      list.appendChild(div);
+    });
+  }
+
+  function selectUser(u) {
+    requestPin(u.name, u.pin).then(ok => {
+      if (ok) loginAs(u);
+    });
+  }
+
+  function requestPin(name, expectedPin) {
+    return new Promise(resolve => {
+      pinBuffer = '';
+      updatePinDots();
+      document.getElementById('pinTitle').textContent = `Olá, ${name}`;
+      document.getElementById('pinSub').textContent = 'Digite seu PIN de 4 dígitos';
+      document.getElementById('pinError').textContent = '';
+      document.getElementById('pinModal').classList.add('open');
+      pinTarget = { expectedPin, resolve };
+    });
+  }
+
+  function loginAs(u) {
+    currentUser = u;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appContent').style.display = 'block';
+    document.getElementById('headerUser').textContent = u.name;
+
+    if (u.role === 'master') {
+      document.getElementById('masterBtn').style.display = 'flex';
+    } else {
+      document.getElementById('masterBtn').style.display = 'none';
+    }
+
+    loadUserPrefs();
+    updateCalc();
+  }
+
+  // Expose PIN functions globally
+  window.pinKey = function(d) {
+    if (pinBuffer.length >= 4) return;
+    pinBuffer += d;
+    updatePinDots();
+    if (pinBuffer.length === 4) {
+      setTimeout(checkPin, 200);
+    }
+  };
+
+  window.pinDel = function() {
+    pinBuffer = pinBuffer.slice(0, -1);
+    updatePinDots();
+    document.getElementById('pinError').textContent = '';
+  };
+
+  window.cancelPin = function() {
+    document.getElementById('pinModal').classList.remove('open');
+    pinBuffer = '';
+    if (pinTarget) { pinTarget.resolve(false); pinTarget = null; }
+  };
+
+  function checkPin() {
+    if (pinBuffer === pinTarget.expectedPin) {
+      document.getElementById('pinModal').classList.remove('open');
+      pinTarget.resolve(true);
+      pinTarget = null;
+      pinBuffer = '';
+    } else {
+      document.getElementById('pinError').textContent = 'PIN incorreto. Tente novamente.';
+      pinBuffer = '';
+      updatePinDots();
+    }
+  }
+
+  function updatePinDots() {
+    const dots = document.querySelectorAll('.pin-dot');
+    dots.forEach((d, i) => {
+      d.classList.toggle('filled', i < pinBuffer.length);
+    });
+  }
+
+  // ─── LOGOUT ───
+  window.logout = function() {
+    currentUser = null;
+    document.getElementById('appContent').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    // Reset calculator
+    document.getElementById('valorProduzidoInput').value = '0,00';
+    valorProduzidoNum = 0;
+    updateCalc();
+  };
+
+  // ─── SIDEBAR ───
+  const menuBtn = document.getElementById('menuBtn');
+  const closeBtn = document.getElementById('closeBtn');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+
+  menuBtn.addEventListener('click', () => {
+    sidebar.classList.add('active');
+    overlay.classList.add('active');
+  });
+
+  const closeMenu = () => {
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+  };
+
+  closeBtn.addEventListener('click', closeMenu);
+  overlay.addEventListener('click', closeMenu);
+
+  // ─── CALCULATOR ───
+  let valorProduzidoNum = 0;
+
+  const valorProduzidoInput = document.getElementById('valorProduzidoInput');
+
+  function mascaraMoeda(el) {
+    let v = el.value.replace(/\D/g, '');
+    if (!v) v = '0';
+    let n = parseInt(v) / 100;
+    el.value = n.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+    return n;
+  }
+
+  valorProduzidoInput.addEventListener('input', function() {
+    valorProduzidoNum = mascaraMoeda(this);
+    updateCalc();
+    scheduleAutoSave();
+  });
+
+  function updateCalc() {
+    const dias = parseInt(document.getElementById('diasTrabalhados').value) || 0;
+    const descanso = parseInt(document.getElementById('diasDescanso').value) || 0;
+    const fixo = parseFloat(document.getElementById('salarioFixo').value) || 0;
+    const comissao = parseFloat(document.getElementById('percentComissao').value) || 0;
+    const imposto = parseFloat(document.getElementById('impostoNotaPercent').value) || 0;
+    const adiant = parseFloat(document.getElementById('adiantamento').value) || 0;
+    const plano = parseFloat(document.getElementById('planoSaude').value) || 0;
+    const outros = parseFloat(document.getElementById('outros').value) || 0;
+
+    const valorReal = valorProduzidoNum - (valorProduzidoNum * imposto / 100);
+    const comissaoVal = (valorReal * comissao) / 100;
+    const ganhoDiario = dias > 0 ? comissaoVal / dias : 0;
+    const brutoComissao = ganhoDiario * (dias + descanso);
+    const bruto = brutoComissao + fixo;
+    const ir = bruto * 0.15;
+    const inss = bruto * 0.11;
+    const descontos = ir + inss + adiant + plano + outros;
+    const liquido = bruto - descontos;
+    const total = liquido + adiant;
+
+    const fmt = v => 'R$ ' + v.toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+    document.getElementById('ganhosDiariosDisplay').textContent = fmt(ganhoDiario);
+    document.getElementById('salarioBrutoDisplay').textContent = fmt(bruto);
+    document.getElementById('descontosTotaisDisplay').textContent = fmt(descontos);
+    document.getElementById('irDisplay').textContent = fmt(ir);
+    document.getElementById('inssDisplay').textContent = fmt(inss);
+    document.getElementById('salarioLiquidoDisplay').textContent = fmt(liquido);
+    document.getElementById('salarioTotalDisplay').textContent = fmt(total);
+  }
+
+  // Auto-save debounce
+  let saveTimeout = null;
+  function scheduleAutoSave() {
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(saveUserPrefs, 800);
+  }
+
+  const menuInputs = ['diasTrabalhados','diasDescanso','salarioFixo','percentComissao','impostoNotaPercent','adiantamento','planoSaude','outros'];
+  menuInputs.forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      updateCalc();
+      scheduleAutoSave();
+    });
+  });
+
+  // ─── USER PREFS (per user in Firestore) ───
+  async function loadUserPrefs() {
+    if (!currentUser) return;
+    try {
+      const d = await getDoc(doc(db, 'prefs', currentUser.id));
+      if (d.exists()) {
+        const p = d.data();
+        menuInputs.forEach(id => {
+          if (p[id] !== undefined) document.getElementById(id).value = p[id];
+        });
+        updateCalc();
+      }
+    } catch(e) {}
+  }
+
+  async function saveUserPrefs() {
+    if (!currentUser) return;
+    const prefs = {};
+    menuInputs.forEach(id => { prefs[id] = document.getElementById(id).value; });
+    try {
+      await setDoc(doc(db, 'prefs', currentUser.id), prefs);
+    } catch(e) {}
+  }
+
+  // ─── SAVE CALCULATION (history) ───
+  document.getElementById('saveCalcBtn').addEventListener('click', async () => {
+    if (!currentUser) return;
+
+    const dias = parseInt(document.getElementById('diasTrabalhados').value) || 0;
+    const descanso = parseInt(document.getElementById('diasDescanso').value) || 0;
+    const fixo = parseFloat(document.getElementById('salarioFixo').value) || 0;
+    const comissao = parseFloat(document.getElementById('percentComissao').value) || 0;
+    const imposto = parseFloat(document.getElementById('impostoNotaPercent').value) || 0;
+    const adiant = parseFloat(document.getElementById('adiantamento').value) || 0;
+    const plano = parseFloat(document.getElementById('planoSaude').value) || 0;
+    const outros = parseFloat(document.getElementById('outros').value) || 0;
+    const valorProduzido = valorProduzidoNum;
+
+    const valorReal = valorProduzido - (valorProduzido * imposto / 100);
+    const comissaoVal = (valorReal * comissao) / 100;
+    const ganhoDiario = dias > 0 ? comissaoVal / dias : 0;
+    const brutoComissao = ganhoDiario * (dias + descanso);
+    const bruto = brutoComissao + fixo;
+    const ir = bruto * 0.15;
+    const inss = bruto * 0.11;
+    const descontos = ir + inss + adiant + plano + outros;
+    const liquido = bruto - descontos;
+    const total = liquido + adiant;
+
+    try {
+      await addDoc(collection(db, 'history'), {
+        userId: currentUser.id,
+        userName: currentUser.name,
+        timestamp: serverTimestamp(),
+        inputs: { valorProduzido, dias, descanso, fixo, comissao, imposto, adiant, plano, outros },
+        results: {
+          ganhoDiario: +ganhoDiario.toFixed(2),
+          bruto: +bruto.toFixed(2),
+          ir: +ir.toFixed(2),
+          inss: +inss.toFixed(2),
+          descontos: +descontos.toFixed(2),
+          liquido: +liquido.toFixed(2),
+          total: +total.toFixed(2)
+        }
+      });
+      showToast('Cálculo salvo!', 'success');
+      closeMenu();
+    } catch(e) {
+      showToast('Erro ao salvar.', 'error');
+    }
+  });
+
+  // ─── ADMIN PANEL ───
+  window.openAdmin = function() {
+    document.getElementById('adminPanel').classList.add('open');
+    loadHistory();
+    renderUserMgmt();
+  };
+
+  window.closeAdmin = function() {
+    document.getElementById('adminPanel').classList.remove('open');
+  };
+
+  window.switchTab = function(tab) {
+    document.querySelectorAll('.admin-tab').forEach((t,i) => {
+      t.classList.toggle('active', (i===0 && tab==='history') || (i===1 && tab==='users'));
+    });
+    document.getElementById('tabHistory').style.display = tab === 'history' ? 'block' : 'none';
+    document.getElementById('tabUsers').style.display = tab === 'users' ? 'block' : 'none';
+  };
+
+  async function loadHistory() {
+    try {
+      const q = query(collection(db, 'history'), orderBy('timestamp', 'desc'));
+      const snap = await getDocs(q);
+      allHistory = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      populateFilterSelect();
+      renderHistory();
+    } catch(e) {
+      document.getElementById('historyList').innerHTML = '<div class="history-empty">Erro ao carregar histórico.</div>';
+    }
+  }
+
+  function populateFilterSelect() {
+    const sel = document.getElementById('filterUser');
+    sel.innerHTML = '<option value="">Todos os usuários</option>';
+    const names = [...new Set(allHistory.map(h => h.userName))];
+    names.forEach(n => {
+      const opt = document.createElement('option');
+      opt.value = n;
+      opt.textContent = n;
+      sel.appendChild(opt);
+    });
+  }
+
+  window.renderHistory = function() {
+    const filter = document.getElementById('filterUser').value;
+    const filtered = filter ? allHistory.filter(h => h.userName === filter) : allHistory;
+    const list = document.getElementById('historyList');
+
+    if (!filtered.length) {
+      list.innerHTML = '<div class="history-empty">Nenhum cálculo salvo ainda.</div>';
+      return;
+    }
+
+    const fmt = v => 'R$ ' + (v||0).toFixed(2).replace('.', ',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+
+    list.innerHTML = filtered.map(h => {
+      const ts = h.timestamp?.toDate ? h.timestamp.toDate().toLocaleString('pt-BR') : '—';
+      const inp = h.inputs || {};
+      const res = h.results || {};
+      return `
+        <div class="history-card">
+          <div class="history-top">
+            <div class="history-user">${h.userName || 'Desconhecido'}</div>
+            <div class="history-date">${ts}</div>
+          </div>
+          <div class="history-grid">
+            <div class="history-item">
+              <div class="history-item-label">Valor Produzido</div>
+              <div class="history-item-value">${fmt(inp.valorProduzido)}</div>
+            </div>
+            <div class="history-item">
+              <div class="history-item-label">Dias Trab.</div>
+              <div class="history-item-value">${inp.dias || 0} dias</div>
+            </div>
+            <div class="history-item">
+              <div class="history-item-label">Comissão</div>
+              <div class="history-item-value">${inp.comissao || 0}%</div>
+            </div>
+            <div class="history-item">
+              <div class="history-item-label">Salário Fixo</div>
+              <div class="history-item-value">${fmt(inp.fixo)}</div>
+            </div>
+            <div class="history-item">
+              <div class="history-item-label">Adiantamento</div>
+              <div class="history-item-value">${fmt(inp.adiant)}</div>
+            </div>
+            <div class="history-item">
+              <div class="history-item-label">Plano Saúde</div>
+              <div class="history-item-value">${fmt(inp.plano)}</div>
+            </div>
+          </div>
+          <div class="history-result">Salário Líquido: ${fmt(res.liquido)}</div>
+        </div>
+      `;
+    }).join('');
+  };
+
+  function renderUserMgmt() {
+    const list = document.getElementById('userMgmtList');
+    const commons = allUsers.filter(u => u.role !== 'master');
+    if (!commons.length) {
+      list.innerHTML = '<div class="history-empty" style="padding:24px">Nenhum usuário comum cadastrado.</div>';
+      return;
+    }
+    list.innerHTML = commons.map(u => `
+      <div class="user-mgmt-item">
+        <div class="user-mgmt-avatar avatar-common">${u.name.charAt(0).toUpperCase()}</div>
+        <div class="user-mgmt-info">
+          <div class="user-mgmt-name">${u.name}</div>
+          <div class="user-mgmt-role">PIN: ${'●'.repeat(4)}</div>
+        </div>
+        <button class="user-del-btn" onclick="deleteUser('${u.id}')">Excluir</button>
+      </div>
+    `).join('');
+  }
+
+  window.addUser = async function() {
+    const name = document.getElementById('newUserName').value.trim();
+    const pin = String(document.getElementById('newUserPin').value).trim();
+
+    if (!name) { showToast('Digite um nome.', 'error'); return; }
+    if (!/^\d{4}$/.test(pin)) { showToast('PIN deve ter 4 dígitos.', 'error'); return; }
+
+    try {
+      const newId = 'user_' + Date.now();
+      await setDoc(doc(db, 'users', newId), {
+        name, pin, role: 'common', createdAt: serverTimestamp()
+      });
+      allUsers.push({ id: newId, name, pin, role: 'common' });
+      renderUserMgmt();
+      renderLoginList();
+      document.getElementById('newUserName').value = '';
+      document.getElementById('newUserPin').value = '';
+      showToast(`${name} adicionado!`, 'success');
+    } catch(e) {
+      showToast('Erro ao adicionar usuário.', 'error');
+    }
+  };
+
+  window.deleteUser = async function(userId) {
+    if (!confirm('Excluir este usuário? O histórico dele será mantido.')) return;
+    try {
+      await deleteDoc(doc(db, 'users', userId));
+      allUsers = allUsers.filter(u => u.id !== userId);
+      renderUserMgmt();
+      renderLoginList();
+      showToast('Usuário excluído.', 'success');
+    } catch(e) {
+      showToast('Erro ao excluir.', 'error');
+    }
+  };
+
+  // ─── UTILS ───
+  function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+  }
+
+  let toastTimer = null;
+  window.showToast = function(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.classList.remove('show'); }, 2800);
+  };
+
+  init();
+</script>
+
+</body>
+</html>
